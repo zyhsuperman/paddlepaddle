@@ -1,0 +1,24 @@
+train:
+  num_workers: 0
+  batch_size: 8
+  max_epochs: 10000
+  adam:
+    lr: 0.0003
+    weight_decay: 0.000001
+  mask_padding: 
+  cotatron_path: 'checkpoints/cota.pdparams'  # path of pretrained cotatron model for VC training
+###########################
+log:
+  ckpt_dir: 'checkpoints/vc'
+  log_dir: 'logs/vc'
+###########################
+chn:
+  # residual encoder
+  residual: [32, 32, 64, 64, 128, 128]
+  residual_out: 1
+  # VC decoder
+  gblock: [512, 384, 256, 192]
+###########################
+ker:
+  # Residual Encoder Hann window
+  hann_window: 21

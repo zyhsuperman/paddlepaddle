@@ -1,0 +1,27 @@
+[
+    {
+        "epoch": 1,
+        "avg_train_loss": 5.0373786958781155,
+        "avg_val_loss": 2.210036490274512
+    },
+    {
+        "epoch": 1,
+        "avg_train_loss": 5.036221585490487,
+        "avg_val_loss": 3.475584310034047
+    },
+    {
+        "epoch": 2,
+        "avg_train_loss": 1.6250048848715695,
+        "avg_val_loss": 1.342464540315711
+    },
+    {
+        "epoch": 2,
+        "avg_train_loss": 1.5931220569393851,
+        "avg_val_loss": 1.431187603784644
+    },
+    {
+        "epoch": 1,
+        "avg_train_loss": 5.712800535288724,
+        "avg_val_loss": 1.6841053185255632
+    }
+]

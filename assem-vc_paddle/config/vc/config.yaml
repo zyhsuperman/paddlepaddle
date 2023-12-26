@@ -1,0 +1,19 @@
+train:
+  dropout: 0.5
+  num_workers: 0
+  batch_size: 8
+  max_epochs: 10000
+  use_attn_loss: True
+  mask_padding: 
+  adam:
+    lr: 0.0003
+    weight_decay: 0.000001
+  cotatron_path: '/home1/zhaoyh/paddlemodel/assem-vc_paddle/checkpoints/cota.pdparams'  # path of pretrained cotatron model for VC training
+###########################
+log:
+  ckpt_dir: 'checkpoints/vc'
+  log_dir: 'logs/vc'
+###########################
+chn:
+  # VC decoder
+  gblock: [512, 384, 256, 192]

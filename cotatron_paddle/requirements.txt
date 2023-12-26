@@ -1,0 +1,7 @@
+inflect
+librosa
+matplotlib
+omegaconf
+unidecode
+paddlepaddle-gpu
+pyyaml
