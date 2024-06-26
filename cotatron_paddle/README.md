@@ -1,4 +1,4 @@
-# Cotatron &mdash; Official PyTorch Implementation
+# Cotatron &mdash; Paddlepaddle Implementation
 
 ## Requirements
 

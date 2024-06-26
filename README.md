@@ -28,5 +28,11 @@
 # wav2lip
 详情见：[wav2lip](./Wav2lip_paddle/README.md)
 
+# JoMoLD
+详情见：[JoMoLD](./JoMoLD_paddle/README.md)
+
+# CM-Co-Occurrence-AVVP
+详情见：[CM-Co-Occurrence-AVVP](./CM-Co-Occurrence-AVVP_paddle/README.md)
+
 # 预训练模型
 在这个[百度网盘链接](https://pan.baidu.com/s/1l1O5LwgnoN4SUEi4pvy1HA?pwd=vh8m)中有仓库里所有项目的预训练权重

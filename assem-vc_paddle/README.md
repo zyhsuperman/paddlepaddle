@@ -1,4 +1,4 @@
-# Assem-VC &mdash; Official PyTorch Implementation
+# Assem-VC &mdash; Paddlepaddle Implementation
 
 
 ## Requirements
