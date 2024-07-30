@@ -1,8 +1,7 @@
 import paddle
-
+import paddle.nn.functional as F
 
 class LabelSmoothingNCELoss(paddle.nn.Layer):
-
     def __init__(self, classes, smoothing=0.0, dim=-1):
         super(LabelSmoothingNCELoss, self).__init__()
         self.confidence = 1.0 - smoothing
@@ -11,14 +10,14 @@ class LabelSmoothingNCELoss(paddle.nn.Layer):
         self.dim = dim
 
     def forward(self, pred, target):
-        pred = paddle.nn.functional.softmax(pred, axis=self.dim)
+        pred = F.softmax(pred, axis=self.dim)
         with paddle.no_grad():
-            true_dist = paddle.zeros_like(x=pred)
-            true_dist.fill_(value=self.smoothing / (self.cls - 1))
-            true_dist.put_along_axis_(axis=1, indices=target.data.unsqueeze
-                (1), values=self.confidence)
-        return -paddle.mean(x=paddle.log(x=paddle.sum(x=true_dist * pred,
-            axis=self.dim)))
+            true_dist = paddle.full_like(pred, self.smoothing / (self.cls - 1))
+            # Create an update tensor with the same shape as target
+            confidence_tensor = paddle.full([target.shape[0], 1], self.confidence, dtype=pred.dtype)
+            true_dist.scatter_(index=target.unsqueeze(1), updates=confidence_tensor, overwrite=True)
+        return -paddle.mean(paddle.sum(true_dist * paddle.log(pred), axis=self.dim))
+
 
 
 class Encoder(paddle.nn.Layer):
