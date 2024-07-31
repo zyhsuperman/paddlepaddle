@@ -312,17 +312,9 @@ if __name__ == '__main__':
         model.set_state_dict(state_dict=model_dict)
     optimizer = paddle.optimizer.Adam(parameters=model.parameters(),
         learning_rate=lr, weight_decay=0.0)
-#     if paddle.device.cuda.device_count() > 1:
-# >>>>>>        model = torch.nn.DataParallel(model)
     model = model
     train_dataset = Dataset('train')
     val_dataset = Dataset('test')
-# >>>>>>    train_data_loader = torch.utils.data.DataLoader(train_dataset,
-#         batch_size=batch_size, shuffle=True, drop_last=True, num_workers=
-#         num_workers, pin_memory=True)
-# >>>>>>    val_data_loader = torch.utils.data.DataLoader(val_dataset, batch_size=
-#         batch_size_val, shuffle=True, drop_last=True, num_workers=
-#         num_workers, pin_memory=True)
 
 
     train_data_loader = paddle.io.DataLoader(train_dataset,
