@@ -1,0 +1,23 @@
+train:
+  num_workers: 16
+  batch_size: 128
+  mask_padding: 
+  adam:
+    lr: 0.0003
+    weight_decay: 0.000001
+  cotatron_path: '/raid/swpark/cotatron/chkpt/cota/pretrained_libri_vctk/43e61eaepoch=393.ckpt'  # path of pretrained cotatron model for VC training
+###########################
+log:
+  chkpt_dir: '/raid/swpark/cotatron/chkpt/vc'
+  log_dir: 'logs/vc'
+###########################
+chn:
+  # residual encoder
+  residual: [32, 32, 64, 64, 128, 128]
+  residual_out: 1
+  # VC decoder
+  gblock: [512, 384, 256, 192]
+###########################
+ker:
+  # Residual Encoder Hann window
+  hann_window: 21
