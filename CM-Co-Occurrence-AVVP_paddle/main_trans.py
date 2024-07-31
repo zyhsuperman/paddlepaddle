@@ -354,7 +354,8 @@ def main():
             learning_rate=args.lr, weight_decay=0.0)
         tmp_lr = paddle.optimizer.lr.StepDecay(step_size=int(args.decay_epoch),
             gamma=args.decay, learning_rate=optimizer.get_lr())
-        optimizer.set_lr_scheduler(tmp_lr)
+        optimizer = paddle.optimizer.Adam(parameters=model.parameters(),
+            learning_rate=tmp_lr, weight_decay=0.0)
         scheduler = tmp_lr
         criterion = paddle.nn.BCELoss()
         best_F = 0
@@ -378,7 +379,7 @@ def main():
             audio_dir, video_dir=args.video_dir, st_dir=args.st_dir,
             transform=transforms.Compose([ToTensor()]))
         test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False,
-            num_workers=1, pin_memory=True)
+            num_workers=1)
         model.set_state_dict(state_dict=paddle.load(path=args.
             model_save_dir + args.checkpoint + '.pdparams'))
         eval(model, test_loader, args.label_val, args)
@@ -387,7 +388,7 @@ def main():
             audio_dir, video_dir=args.video_dir, st_dir=args.st_dir,
             transform=transforms.Compose([ToTensor()]))
         test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False,
-            num_workers=1, pin_memory=True)
+            num_workers=1)
         model.set_state_dict(state_dict=paddle.load(path=args.
             model_save_dir + args.checkpoint + '.pdparams'))
         eval(model, test_loader, args.label_test, args)
