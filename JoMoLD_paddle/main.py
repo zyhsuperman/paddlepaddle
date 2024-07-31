@@ -29,9 +29,9 @@ def get_LLP_dataloader(args):
                                transform=Compose([ToTensor()]))
 
     # 使用 PaddlePaddle 的 DataLoader 设置数据加载器
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=1, use_shared_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=1, use_shared_memory=True)
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1, use_shared_memory=True)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0, use_shared_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=0, use_shared_memory=True)
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0, use_shared_memory=True)
 
     return train_loader, val_loader, test_loader
 
@@ -212,12 +212,17 @@ def train_label_denoising(args, model, train_loader, optimizer, criterion,
                 pos_num_v = paddle.sum(pos_index_v[:, i].astype(paddle.float64))
                 numbers_a = paddle.cast(paddle.multiply(noise_ratios_a[i], pos_num_a), dtype='int32')
                 numbers_v = paddle.cast(paddle.multiply(noise_ratios_v[i], pos_num_v), dtype='int32')
+                
                 # remove noise labels for visual
                 mask_a = paddle.zeros([batch], dtype='float32').cuda()
                 mask_v = paddle.zeros([batch], dtype='float32').cuda()
                 if numbers_v > 0:
-                    mask_a[sort_index_a[pos_index_v[sort_index_a[:, i], i], i][:numbers_v]] = 1
-                    mask_v[sort_index_v[pos_index_v[sort_index_v[:, i], i], i][-numbers_v:]] = 1
+                    sort_index_a_i = sort_index_a[:, i].numpy()
+                    pos_index_v_i = pos_index_v[:, i].numpy()
+                    indices_v_a = sort_index_a_i[pos_index_v_i[sort_index_a_i].tolist()][:numbers_v.numpy()[0]]
+                    indices_v_v = sort_index_v[:, i].numpy()[pos_index_v[:, i].numpy().tolist()][-numbers_v.numpy()[0]:]
+                    mask_a[indices_v_a] = 1
+                    mask_v[indices_v_v] = 1
                 mask = paddle.nonzero(paddle.multiply(mask_a, mask_v)).squeeze(-1).astype('int64')
                 Pv[mask, i] = 0
 
@@ -225,8 +230,12 @@ def train_label_denoising(args, model, train_loader, optimizer, criterion,
                 mask_a = paddle.zeros([batch], dtype='float32').cuda()
                 mask_v = paddle.zeros([batch], dtype='float32').cuda()
                 if numbers_a > 0:
-                    mask_a[sort_index_a[pos_index_a[sort_index_a[:, i], i], i][-numbers_a:]] = 1
-                    mask_v[sort_index_v[pos_index_a[sort_index_v[:, i], i], i][:numbers_a]] = 1
+                    sort_index_a_i = sort_index_a[:, i].numpy()
+                    pos_index_a_i = pos_index_a[:, i].numpy()
+                    indices_a_a = sort_index_a_i[pos_index_a_i[sort_index_a_i].tolist()][-numbers_a.numpy()[0]:]
+                    indices_a_v = sort_index_v[:, i].numpy()[pos_index_a[:, i].numpy().tolist()][:numbers_a.numpy()[0]]
+                    mask_a[indices_a_a] = 1
+                    mask_v[indices_a_v] = 1
                 mask = paddle.nonzero(paddle.multiply(mask_a, mask_v)).squeeze(-1).astype('int64')
                 Pa[mask, i] = 0
         optimizer.clear_grad()
@@ -422,15 +431,14 @@ def main():
     model = MMIL_Net(args.num_layers, args.temperature)
     start = time.time()
     if args.mode == 'train_noise_estimator':
-# >>>>>>        logger = torch.utils.tensorboard.SummaryWriter(args.log_file
-#             ) if args.log_file else None
         args.with_ca = False
         train_loader, val_loader, test_loader = get_LLP_dataloader(args)
         optimizer = paddle.optimizer.Adam(parameters=model.parameters(),
             learning_rate=args.lr, weight_decay=0.0)
         tmp_lr = paddle.optimizer.lr.StepDecay(step_size=args.lr_step_size,
             gamma=args.lr_gamma, learning_rate=optimizer.get_lr())
-        optimizer.set_lr_scheduler(tmp_lr)
+        optimizer = paddle.optimizer.Adam(parameters=model.parameters(),
+            learning_rate=tmp_lr, weight_decay=0.0)
         scheduler = tmp_lr
         criterion = paddle.nn.BCELoss()
         best_F = 0
@@ -454,36 +462,11 @@ def main():
                     state_dict['epochs'] = args.epochs
                     paddle.save(obj=state_dict, path=os.path.join(args.
                         model_save_dir, args.checkpoint))
-        #     if logger:
-        #         logger.add_scalar('audio_seg', audio_seg, global_step=epoch *
-        #             len(train_loader))
-        #         logger.add_scalar('visual_seg', visual_seg, global_step=
-        #             epoch * len(train_loader))
-        #         logger.add_scalar('av_seg', av_seg, global_step=epoch * len
-        #             (train_loader))
-        #         logger.add_scalar('avg_type_seg', avg_type_seg, global_step
-        #             =epoch * len(train_loader))
-        #         logger.add_scalar('avg_event_seg', avg_event_seg,
-        #             global_step=epoch * len(train_loader))
-        #         logger.add_scalar('audio_eve', audio_eve, global_step=epoch *
-        #             len(train_loader))
-        #         logger.add_scalar('visual_eve', visual_eve, global_step=
-        #             epoch * len(train_loader))
-        #         logger.add_scalar('av_eve', av_eve, global_step=epoch * len
-        #             (train_loader))
-        #         logger.add_scalar('avg_type_eve', avg_type_eve, global_step
-        #             =epoch * len(train_loader))
-        #         logger.add_scalar('avg_event_eve', avg_event_eve,
-        #             global_step=epoch * len(train_loader))
-        # if logger:
-        #     logger.close()
-        """Class Method: *.zero_grad, can not convert, please check whether it is torch.Tensor.*/Optimizer.*/nn.Module.*/torch.distributions.Distribution.*/torch.autograd.function.FunctionCtx.*/torch.profiler.profile.*/torch.autograd.profiler.profile.*, and convert manually"""
         optimizer.clear_grad()
         model = best_model
         print('Test the best model:')
         eval(args, model, test_loader, args.label_test)
     elif args.mode == 'calculate_noise_ratio':
-        # 假设 LLP_dataset 已经适配为 PaddlePaddle
         train_dataset = LLP_dataset(label=args.label_train, audio_dir=args.audio_dir,
                                     video_dir=args.video_dir, st_dir=args.st_dir,
                                     transform=paddle.vision.transforms.Compose([ToTensor()]))
@@ -495,15 +478,14 @@ def main():
         model.set_state_dict(state_dict=resume['model'])
         calculate_noise_ratio(args, model, train_loader)
     elif args.mode == 'train_label_denoising':
-# >>>>>>        logger = torch.utils.tensorboard.SummaryWriter(args.log_file
-#             ) if args.log_file else None
         args.with_ca = True
         train_loader, val_loader, test_loader = get_LLP_dataloader(args)
         optimizer = paddle.optimizer.Adam(parameters=model.parameters(),
             learning_rate=args.lr, weight_decay=args.weight_decay)
         tmp_lr = paddle.optimizer.lr.StepDecay(step_size=args.lr_step_size,
             gamma=args.lr_gamma, learning_rate=optimizer.get_lr())
-        optimizer.set_lr_scheduler(tmp_lr)
+        optimizer = paddle.optimizer.Adam(parameters=model.parameters(),
+            learning_rate=tmp_lr, weight_decay=0.0)
         scheduler = tmp_lr
         criterion = paddle.nn.BCELoss()
         best_F = 0
@@ -521,29 +503,6 @@ def main():
                 best_F = audio_eve
                 best_model = copy.deepcopy(model)
                 best_epoch = epoch
-        #     if logger:
-        #         logger.add_scalar('audio_seg', audio_seg, global_step=epoch *
-        #             len(train_loader))
-        #         logger.add_scalar('visual_seg', visual_seg, global_step=
-        #             epoch * len(train_loader))
-        #         logger.add_scalar('av_seg', av_seg, global_step=epoch * len
-        #             (train_loader))
-        #         logger.add_scalar('avg_type_seg', avg_type_seg, global_step
-        #             =epoch * len(train_loader))
-        #         logger.add_scalar('avg_event_seg', avg_event_seg,
-        #             global_step=epoch * len(train_loader))
-        #         logger.add_scalar('audio_eve', audio_eve, global_step=epoch *
-        #             len(train_loader))
-        #         logger.add_scalar('visual_eve', visual_eve, global_step=
-        #             epoch * len(train_loader))
-        #         logger.add_scalar('av_eve', av_eve, global_step=epoch * len
-        #             (train_loader))
-        #         logger.add_scalar('avg_type_eve', avg_type_eve, global_step
-        #             =epoch * len(train_loader))
-        #         logger.add_scalar('avg_event_eve', avg_event_eve,
-        #             global_step=epoch * len(train_loader))
-        # if logger:
-        #     logger.close()
         optimizer.clear_grad()
         model = best_model
         if save_model:
