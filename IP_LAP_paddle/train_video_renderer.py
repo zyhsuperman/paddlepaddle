@@ -194,50 +194,6 @@ def split(x, num_or_sections, axis=0):
     else:
         return paddle.split(x, num_or_sections, axis)
 
-# def compute_generation_quality(gt, fake_image):
-#     global global_step
-#     import torch
-#     fake_image_numpy = fake_image.cpu().numpy()
-#     gt_numpy = gt.cpu().numpy()
-
-#     fake_image_torch = torch.tensor(fake_image_numpy).to('cuda')
-#     gt_torch = torch.tensor(gt_numpy).to('cuda')
-#     psnr_values = []
-#     ssim_values = []
-#     psnr_value = psnr(fake_image_torch, gt_torch, reduction='none')
-#     psnr_values.extend([e.item() for e in psnr_value])
-#     ssim_value = ssim(fake_image_torch, gt_torch, data_range=1.0, reduction='none')
-#     ssim_values.extend([e.item() for e in ssim_value])
-#     B_mul_T = fake_image.shape[0]
-#     total_images = paddle.concat(x=(gt, fake_image), axis=0)
-#     if len(total_images) > FID_batch_size:
-#         total_images = split(x=total_images, num_or_sections=
-#             FID_batch_size, axis=0)
-#     else:
-#         total_images = [total_images]
-#     total_feats = []
-#     print('computing FID...')
-#     for sub_images in total_images:
-#         # sub_images = sub_images
-#         sub_images_numpy = sub_images.cpu().numpy()
-#         sub_images_torch = torch.tensor(sub_images_numpy).to('cuda')
-#         feats = fid_metric.compute_feats([{'images': sub_images_torch}],
-#             feature_extractor=feature_extractor)
-#         feats = feats.detach()
-#         total_feats.append(feats)
-#     total_feats = paddle.concat(x=total_feats, axis=0)
-#     gt_feat, pd_feat = split(x=total_feats, num_or_sections=(
-#         B_mul_T, B_mul_T), axis=0)
-#     gt_feats = gt_feat
-#     pd_feats = pd_feat
-#     gt_feats_numpy = gt_feats.cpu().numpy()
-#     pd_feats_numpy = pd_feats.cpu().numpy()
-#     gt_feats_torch = torch.tensor(gt_feats_numpy).to('cuda')
-#     pd_feats_torch = torch.tensor(pd_feats_numpy).to('cuda')
-#     fid = fid_metric.compute_metric(pd_feats_torch, gt_feats_torch).item()
-#     print(2)
-#     return np.asarray(psnr_values).mean(), np.asarray(ssim_values).mean(), fid
-
 def compute_generation_quality(gt, fake_image):
     global global_step
     import torch
@@ -252,33 +208,6 @@ def compute_generation_quality(gt, fake_image):
     psnr_values.extend([e.item() for e in psnr_value])
     ssim_value = ssim(fake_image_torch, gt_torch, data_range=1.0, reduction='none')
     ssim_values.extend([e.item() for e in ssim_value])
-    # B_mul_T = fake_image.shape[0]
-    # total_images = paddle.concat(x=(gt, fake_image), axis=0)
-    # if len(total_images) > FID_batch_size:
-    #     total_images = split(x=total_images, num_or_sections=
-    #         FID_batch_size, axis=0)
-    # else:
-    #     total_images = [total_images]
-    # total_feats = []
-    # print('computing FID...')
-    # for sub_images in total_images:
-    #     # sub_images = sub_images
-    #     sub_images_numpy = sub_images.cpu().numpy()
-    #     sub_images_torch = torch.tensor(sub_images_numpy).to('cuda')
-    #     feats = fid_metric.compute_feats([{'images': sub_images_torch}],
-    #         feature_extractor=feature_extractor)
-    #     feats = feats.detach()
-    #     total_feats.append(feats)
-    # total_feats = paddle.concat(x=total_feats, axis=0)
-    # gt_feat, pd_feat = split(x=total_feats, num_or_sections=(
-    #     B_mul_T, B_mul_T), axis=0)
-    # gt_feats = gt_feat
-    # pd_feats = pd_feat
-    # gt_feats_numpy = gt_feats.cpu().numpy()
-    # pd_feats_numpy = pd_feats.cpu().numpy()
-    # gt_feats_torch = torch.tensor(gt_feats_numpy).to('cuda')
-    # pd_feats_torch = torch.tensor(pd_feats_numpy).to('cuda')
-    # fid = fid_metric.compute_metric(pd_feats_torch, gt_feats_torch).item()
     return np.asarray(psnr_values).mean(), np.asarray(ssim_values).mean()
 
 
@@ -375,21 +304,14 @@ if __name__ == '__main__':
     if finetune_path is not None:
         load_checkpoint(finetune_path, model, optimizer, reset_optimizer=
             False, overwrite_global_states=False)
-#     if paddle.device.cuda.device_count() > 1:
-# >>>>>>        model = torch.nn.DataParallel(model)
-# >>>>>>        disc = torch.nn.DataParallel(disc)
+
     disc = disc
     disc_optimizer = paddle.optimizer.Adam(parameters=[p for p in disc.
         parameters() if not p.stop_gradient], learning_rate=0.0001, beta1=(
         0.5, 0.999)[0], beta2=(0.5, 0.999)[1], weight_decay=0.0)
     train_dataset = Dataset('train')
     val_dataset = Dataset('test')
-# >>>>>>    train_data_loader = torch.utils.data.DataLoader(train_dataset,
-#         batch_size=batch_size, shuffle=True, drop_last=True, num_workers=
-#         num_workers, pin_memory=True)
-# >>>>>>    val_data_loader = torch.utils.data.DataLoader(val_dataset, batch_size=
-#         batch_size_val, shuffle=True, drop_last=True, num_workers=
-#         num_workers, pin_memory=True)
+
     train_data_loader = paddle.io.DataLoader(train_dataset,
                                             batch_size=batch_size,
                                             shuffle=True,
