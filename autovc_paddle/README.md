@@ -3,7 +3,6 @@
 - Python 3.8
 - Numpy
 - paddlepaddle
-- TensorFlow >= v1.3 (only for tensorboard)
 - librosa
 - tqdm
 
